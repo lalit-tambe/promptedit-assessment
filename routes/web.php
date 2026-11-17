@@ -1,9 +1,15 @@
 <?php
 
 use App\Http\Controllers\GenerationController;
+use App\Http\Controllers\PixelforgeWebhookController;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'Welcome')->name('home');
+
+Route::post('/webhooks/pixelforge', PixelforgeWebhookController::class)
+    ->withoutMiddleware([ValidateCsrfToken::class])
+    ->name('webhooks.pixelforge');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');
