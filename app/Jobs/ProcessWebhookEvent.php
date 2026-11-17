@@ -109,6 +109,12 @@ class ProcessWebhookEvent implements ShouldQueue
             default => is_string($object['status'] ?? null) ? $object['status'] : $locked->status,
         };
 
+        if ($targetStatus === Generation::STATUS_QUEUED) {
+            $locked->touch();
+
+            return;
+        }
+
         if ($targetStatus === Generation::STATUS_PROCESSING) {
             if ($locked->status === Generation::STATUS_QUEUED) {
                 $locked->status = Generation::STATUS_PROCESSING;
