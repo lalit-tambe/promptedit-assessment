@@ -1,0 +1,43 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
+
+/**
+ * @property int $id
+ * @property string $event_id
+ * @property string $type
+ * @property string|null $generation_provider_id
+ * @property array<string, mixed> $payload
+ * @property Carbon $received_at
+ * @property Carbon|null $processed_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ */
+#[Fillable([
+    'event_id',
+    'type',
+    'generation_provider_id',
+    'payload',
+    'received_at',
+    'processed_at',
+])]
+class WebhookEvent extends Model
+{
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'payload' => 'array',
+            'received_at' => 'datetime',
+            'processed_at' => 'datetime',
+        ];
+    }
+}
