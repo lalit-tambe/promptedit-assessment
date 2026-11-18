@@ -110,13 +110,14 @@ function parseDecimalToScaledBigInt(value: string, scale = 12): bigint {
 /**
  * Format a 12-decimal string (or scaled BigInt) to a display string with 6 decimal places.
  */
-function formatDisplayUsd(decimalString: string, decimals = 6): string {
+function formatDisplayUsd(decimalString: string, minDecimals = 6): string {
     const trimmed = decimalString.trim();
     const [wholePart = '0', fractionPart = ''] = trimmed.split('.');
-    const padded = (fractionPart + '0'.repeat(12)).slice(0, 12);
-
-    // Keep at least `decimals` digits, and include non-zero trailing digits up to 8 places if needed
-    const visibleFraction = padded.slice(0, decimals);
+    const strippedTrailingZeros = fractionPart.replace(/0+$/, '');
+    const visibleFraction =
+        strippedTrailingZeros.length > minDecimals
+            ? strippedTrailingZeros
+            : strippedTrailingZeros.padEnd(minDecimals, '0');
     return `$${wholePart}.${visibleFraction}`;
 }
 

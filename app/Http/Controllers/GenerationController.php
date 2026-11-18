@@ -16,6 +16,43 @@ use Inertia\Response;
 
 class GenerationController extends Controller
 {
+    public function dashboard(Request $request): Response
+    {
+        /** @var \App\Models\User $user */
+        $user = $request->user();
+
+        $allSucceededCharges = $user->generations()
+            ->where('status', Generation::STATUS_SUCCEEDED)
+            ->pluck('charged_cost');
+
+        $totalCharged = '0.000000000000';
+        foreach ($allSucceededCharges as $charge) {
+            if ($charge !== null) {
+                $totalCharged = bcadd($totalCharged, (string) $charge, 12);
+            }
+        }
+
+        $stats = [
+            'total' => $user->generations()->count(),
+            'succeeded' => $user->generations()->where('status', Generation::STATUS_SUCCEEDED)->count(),
+            'in_progress' => $user->generations()->whereIn('status', [Generation::STATUS_QUEUED, Generation::STATUS_PROCESSING])->count(),
+            'failed' => $user->generations()->where('status', Generation::STATUS_FAILED)->count(),
+            'total_charged' => $totalCharged,
+        ];
+
+        $recentGenerations = $user->generations()
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->limit(6)
+            ->get();
+
+        return Inertia::render('Dashboard', [
+            'stats' => $stats,
+            'recentGenerations' => $recentGenerations,
+            'hasUnfinished' => $stats['in_progress'] > 0,
+        ]);
+    }
+
     public function create(PixelforgeClient $client, PricingCalculator $calculator): Response
     {
         $rates = $this->currentRates($client);

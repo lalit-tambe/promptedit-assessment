@@ -147,16 +147,20 @@ function isImageExpired(gen: GenerationItem): boolean {
     return false;
 }
 
-function formatUsd(decimalString: string | null, decimals = 6): string {
+function formatUsd(decimalString: string | null, minDecimals = 6): string {
     if (decimalString === null || decimalString.trim() === '') {
         return '';
     }
 
     const trimmed = decimalString.trim();
     const [wholePart = '0', fractionPart = ''] = trimmed.split('.');
-    const padded = (fractionPart + '0'.repeat(12)).slice(0, decimals);
+    const strippedTrailingZeros = fractionPart.replace(/0+$/, '');
+    const visibleFraction =
+        strippedTrailingZeros.length > minDecimals
+            ? strippedTrailingZeros
+            : strippedTrailingZeros.padEnd(minDecimals, '0');
 
-    return `$${wholePart}.${padded}`;
+    return `$${wholePart}.${visibleFraction}`;
 }
 
 function formatChargedCost(gen: GenerationItem): string {

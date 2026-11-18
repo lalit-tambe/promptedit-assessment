@@ -12,7 +12,7 @@ Route::post('/webhooks/pixelforge', PixelforgeWebhookController::class)
     ->name('webhooks.pixelforge');
 
 Route::middleware(['auth'])->group(function () {
-    Route::inertia('dashboard', 'Dashboard')->name('dashboard');
+    Route::get('dashboard', [GenerationController::class, 'dashboard'])->name('dashboard');
     Route::get('/generate', [GenerationController::class, 'create'])->name('generations.create');
     Route::post('/generations/estimate', [GenerationController::class, 'estimate'])->name('generations.estimate');
     Route::get('/generations', [GenerationController::class, 'index'])->name('generations.index');
