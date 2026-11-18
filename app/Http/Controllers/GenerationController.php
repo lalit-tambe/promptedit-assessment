@@ -82,11 +82,18 @@ class GenerationController extends Controller
         $user = $request->user();
 
         $generations = $user->generations()
-            ->latest()
-            ->get();
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->paginate(10)
+            ->withQueryString();
+
+        $hasUnfinished = $user->generations()
+            ->whereIn('status', [Generation::STATUS_QUEUED, Generation::STATUS_PROCESSING])
+            ->exists();
 
         return Inertia::render('Generations/Index', [
             'generations' => $generations,
+            'hasUnfinished' => $hasUnfinished,
         ]);
     }
 
