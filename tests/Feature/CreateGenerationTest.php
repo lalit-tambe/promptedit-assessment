@@ -16,6 +16,63 @@ beforeEach(function () {
     ]);
 });
 
+it('renders the Generate page with pricing props and initial estimates from the server', function () {
+    Http::fake([
+        'https://pixelforge.promptedit.dev/v1/pricing' => Http::response([
+            'rates' => [
+                'input_text_tokens' => '5.00',
+                'input_image_tokens' => '10.00',
+                'output_tokens' => '40.00',
+                'reasoning_tokens' => '12.50',
+            ],
+        ], 200),
+    ]);
+
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->get('/generate');
+
+    $response->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Generate')
+            ->has('rates')
+            ->has('sizes', 3)
+            ->has('qualities', 3)
+            ->where('markup', '1.25')
+            ->where('initialEstimate.user_price', '0.072187500000')
+            ->where('initialMaxEstimate.user_price', '0.086250000000')
+        );
+});
+
+it('calculates live estimate and max_estimate via POST /generations/estimate using PricingCalculator', function () {
+    Http::fake([
+        'https://pixelforge.promptedit.dev/v1/pricing' => Http::response([
+            'rates' => [
+                'input_text_tokens' => '5.00',
+                'input_image_tokens' => '10.00',
+                'output_tokens' => '40.00',
+                'reasoning_tokens' => '12.50',
+            ],
+        ], 200),
+    ]);
+
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->postJson('/generations/estimate', [
+        'prompt' => str_repeat('a', 400),
+        'size' => '1536x1024',
+        'quality' => 'high',
+        'reference_images' => [
+            'https://example.com/1.png',
+            'https://example.com/2.png',
+        ],
+    ]);
+
+    $response->assertOk()
+        ->assertJsonPath('max_estimate.provider_cost', '0.373875000')
+        ->assertJsonPath('max_estimate.user_price', '0.467343750000');
+});
+
 it('validates generation creation fields', function () {
     $user = User::factory()->create();
 

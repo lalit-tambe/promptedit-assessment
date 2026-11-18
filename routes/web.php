@@ -17,6 +17,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/generate', [GenerationController::class, 'create'])->name('generations.create');
+    Route::post('/generations/estimate', [GenerationController::class, 'estimate'])->name('generations.estimate');
     Route::get('/generations', [GenerationController::class, 'index'])->name('generations.index');
     Route::post('/generations', [GenerationController::class, 'store'])->name('generations.store');
 });
