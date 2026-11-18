@@ -103,6 +103,43 @@ class PixelforgeClient
     }
 
     /**
+     * Return current token rates (using cached /pricing when available, or fetching /pricing with config fallback).
+     *
+     * @return array<string, string>
+     */
+    public function getCurrentRates(bool $fetchIfUncached = true): array
+    {
+        /** @var array<string, mixed>|null $cachedPricing */
+        $cachedPricing = Cache::get(self::PRICING_CACHE_KEY);
+
+        if (is_array($cachedPricing['rates'] ?? null)) {
+            /** @var array<string, string> $cachedRates */
+            $cachedRates = $cachedPricing['rates'];
+
+            return $cachedRates;
+        }
+
+        if ($fetchIfUncached) {
+            try {
+                $pricing = $this->getPricing();
+                if (is_array($pricing['rates'] ?? null)) {
+                    /** @var array<string, string> $liveRates */
+                    $liveRates = $pricing['rates'];
+
+                    return $liveRates;
+                }
+            } catch (\Throwable) {
+                // Fall back to configured default rates if the pricing endpoint is unreachable
+            }
+        }
+
+        /** @var array<string, string> $fallback */
+        $fallback = (array) config('pixelforge.rates');
+
+        return $fallback;
+    }
+
+    /**
      * Fetch daily usage report from GET /usage.
      *
      * @return array<string, mixed>

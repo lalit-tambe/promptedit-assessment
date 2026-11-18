@@ -4,8 +4,8 @@ use App\Jobs\SubmitGenerationJob;
 use App\Models\Generation;
 use App\Models\User;
 use App\Services\Pixelforge\PixelforgeClient;
-use Illuminate\Http\Client\Request;
 use Illuminate\Contracts\Queue\Job;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 

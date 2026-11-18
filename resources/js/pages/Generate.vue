@@ -104,7 +104,10 @@ function parseDecimalToScaledBigInt(value: string, scale = 12): bigint {
     const trimmed = value.trim();
     const [wholePart = '0', fractionPart = ''] = trimmed.split('.');
     const paddedFraction = (fractionPart + '0'.repeat(scale)).slice(0, scale);
-    return BigInt(wholePart || '0') * 10n ** BigInt(scale) + BigInt(paddedFraction || '0');
+    return (
+        BigInt(wholePart || '0') * 10n ** BigInt(scale) +
+        BigInt(paddedFraction || '0')
+    );
 }
 
 /**
@@ -318,7 +321,7 @@ function submit(): void {
                 <div class="flex items-center justify-between">
                     <Label for="prompt">Prompt</Label>
                     <span
-                        class="text-xs font-mono"
+                        class="font-mono text-xs"
                         :class="
                             promptCharacterCount > maxPromptLength
                                 ? 'font-semibold text-destructive'
@@ -409,10 +412,7 @@ function submit(): void {
                     </Button>
                 </div>
 
-                <div
-                    v-if="referenceImages.length"
-                    class="grid gap-3"
-                >
+                <div v-if="referenceImages.length" class="grid gap-3">
                     <div
                         v-for="(imageUrl, index) in referenceImages"
                         :key="index"
@@ -486,9 +486,7 @@ function submit(): void {
                     class="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t pt-2.5 text-xs text-muted-foreground"
                 >
                     <span>
-                        Text: ~{{
-                            serverEstimate.tokens.input_text_tokens
-                        }}
+                        Text: ~{{ serverEstimate.tokens.input_text_tokens }}
                         tokens
                     </span>
                     <span>
@@ -500,9 +498,7 @@ function submit(): void {
                         {{ serverEstimate.tokens.output_tokens }} tokens
                     </span>
                     <span>
-                        Reasoning: ~{{
-                            serverEstimate.tokens.reasoning_tokens
-                        }}
+                        Reasoning: ~{{ serverEstimate.tokens.reasoning_tokens }}
                         tokens
                     </span>
                 </div>

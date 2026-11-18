@@ -188,7 +188,9 @@ function statusBadgeClasses(status: GenerationStatus): string {
         <!-- Summary Cards -->
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div class="rounded-xl border bg-card p-5 shadow-xs">
-                <span class="text-xs font-medium text-muted-foreground uppercase">
+                <span
+                    class="text-xs font-medium text-muted-foreground uppercase"
+                >
                     Total Generations
                 </span>
                 <div class="mt-2 text-2xl font-semibold">
@@ -197,25 +199,34 @@ function statusBadgeClasses(status: GenerationStatus): string {
             </div>
 
             <div class="rounded-xl border bg-card p-5 shadow-xs">
-                <span class="text-xs font-medium text-muted-foreground uppercase">
+                <span
+                    class="text-xs font-medium text-muted-foreground uppercase"
+                >
                     Succeeded
                 </span>
-                <div class="mt-2 text-2xl font-semibold text-emerald-600 dark:text-emerald-400">
+                <div
+                    class="mt-2 text-2xl font-semibold text-emerald-600 dark:text-emerald-400"
+                >
                     {{ props.stats.succeeded }}
                 </div>
             </div>
 
             <div class="rounded-xl border bg-card p-5 shadow-xs">
-                <span class="text-xs font-medium text-muted-foreground uppercase">
+                <span
+                    class="text-xs font-medium text-muted-foreground uppercase"
+                >
                     In Progress / Failed
                 </span>
                 <div class="mt-2 text-2xl font-semibold">
-                    {{ props.stats.in_progress }} active · {{ props.stats.failed }} failed
+                    {{ props.stats.in_progress }} active ·
+                    {{ props.stats.failed }} failed
                 </div>
             </div>
 
             <div class="rounded-xl border bg-card p-5 shadow-xs">
-                <span class="text-xs font-medium text-muted-foreground uppercase">
+                <span
+                    class="text-xs font-medium text-muted-foreground uppercase"
+                >
                     Total Charged
                 </span>
                 <div class="mt-2 font-mono text-2xl font-semibold">
@@ -258,7 +269,9 @@ function statusBadgeClasses(status: GenerationStatus): string {
                     :key="gen.id"
                     class="flex flex-col overflow-hidden rounded-xl border bg-card shadow-xs"
                 >
-                    <div class="relative aspect-square w-full border-b bg-muted/20">
+                    <div
+                        class="relative aspect-square w-full border-b bg-muted/20"
+                    >
                         <img
                             v-if="gen.image_url && !isImageExpired(gen)"
                             :src="gen.image_url"
@@ -326,7 +339,9 @@ function statusBadgeClasses(status: GenerationStatus): string {
                                     <Clock v-else class="size-3" />
                                     {{ gen.status }}
                                 </span>
-                                <span class="font-mono text-xs text-muted-foreground">
+                                <span
+                                    class="font-mono text-xs text-muted-foreground"
+                                >
                                     {{ gen.size }} · {{ gen.quality }}
                                 </span>
                             </div>
@@ -336,14 +351,18 @@ function statusBadgeClasses(status: GenerationStatus): string {
                             </p>
 
                             <p
-                                v-if="gen.status === 'failed' && gen.error_message"
+                                v-if="
+                                    gen.status === 'failed' && gen.error_message
+                                "
                                 class="text-xs text-rose-600 dark:text-rose-400"
                             >
                                 {{ gen.error_message }}
                             </p>
                         </div>
 
-                        <div class="flex items-center justify-between border-t pt-2.5 text-xs">
+                        <div
+                            class="flex items-center justify-between border-t pt-2.5 text-xs"
+                        >
                             <span class="text-muted-foreground">
                                 Est:
                                 <strong class="font-mono text-foreground">

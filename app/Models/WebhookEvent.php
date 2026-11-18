@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -12,10 +12,10 @@ use Illuminate\Support\Carbon;
  * @property string $type
  * @property string|null $generation_provider_id
  * @property array<string, mixed> $payload
- * @property Carbon $received_at
- * @property Carbon|null $processed_at
- * @property Carbon|null $created_at
- * @property Carbon|null $updated_at
+ * @property CarbonInterface $received_at
+ * @property CarbonInterface|null $processed_at
+ * @property CarbonInterface|null $created_at
+ * @property CarbonInterface|null $updated_at
  */
 #[Fillable([
     'event_id',

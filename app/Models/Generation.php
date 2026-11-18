@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
@@ -29,14 +29,14 @@ use Illuminate\Support\Str;
  * @property int|null $total_tokens
  * @property array<string, string>|null $rates
  * @property string|null $image_url
- * @property Carbon|null $image_url_expires_at
+ * @property CarbonInterface|null $image_url_expires_at
  * @property string|null $error_code
  * @property string|null $error_message
  * @property int $retry_count
- * @property Carbon|null $started_at
- * @property Carbon|null $finished_at
- * @property Carbon|null $created_at
- * @property Carbon|null $updated_at
+ * @property CarbonInterface|null $started_at
+ * @property CarbonInterface|null $finished_at
+ * @property CarbonInterface|null $created_at
+ * @property CarbonInterface|null $updated_at
  */
 #[Fillable([
     'idempotency_key',

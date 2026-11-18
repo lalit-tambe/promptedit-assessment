@@ -131,9 +131,10 @@ class PricingCalculator
      */
     public function userPrice(string $providerCost): string
     {
-        $markup = (string) config('pixelforge.markup', '1.25');
+        $numericCost = $this->numericString($providerCost, '0.000000000');
+        $markup = $this->numericString((string) config('pixelforge.markup', '1.25'), '1.25');
 
-        return bcmul($providerCost, $markup, self::USER_PRICE_SCALE);
+        return bcmul($numericCost, $markup, self::USER_PRICE_SCALE);
     }
 
     /**
@@ -229,10 +230,10 @@ class PricingCalculator
     /**
      * @param  array<string, string>|null  $rates
      * @return array{
-     *     input_text_tokens: string,
-     *     input_image_tokens: string,
-     *     output_tokens: string,
-     *     reasoning_tokens: string
+     *     input_text_tokens: numeric-string,
+     *     input_image_tokens: numeric-string,
+     *     output_tokens: numeric-string,
+     *     reasoning_tokens: numeric-string
      * }
      */
     protected function resolveRates(?array $rates): array
@@ -246,11 +247,20 @@ class PricingCalculator
         ]);
 
         return [
-            'input_text_tokens' => (string) ($rates['input_text_tokens'] ?? $defaultRates['input_text_tokens'] ?? '5.00'),
-            'input_image_tokens' => (string) ($rates['input_image_tokens'] ?? $defaultRates['input_image_tokens'] ?? '10.00'),
-            'output_tokens' => (string) ($rates['output_tokens'] ?? $defaultRates['output_tokens'] ?? '40.00'),
-            'reasoning_tokens' => (string) ($rates['reasoning_tokens'] ?? $defaultRates['reasoning_tokens'] ?? '12.50'),
+            'input_text_tokens' => $this->numericString((string) ($rates['input_text_tokens'] ?? $defaultRates['input_text_tokens'] ?? '5.00'), '5.00'),
+            'input_image_tokens' => $this->numericString((string) ($rates['input_image_tokens'] ?? $defaultRates['input_image_tokens'] ?? '10.00'), '10.00'),
+            'output_tokens' => $this->numericString((string) ($rates['output_tokens'] ?? $defaultRates['output_tokens'] ?? '40.00'), '40.00'),
+            'reasoning_tokens' => $this->numericString((string) ($rates['reasoning_tokens'] ?? $defaultRates['reasoning_tokens'] ?? '12.50'), '12.50'),
         ];
+    }
+
+    /**
+     * @param  numeric-string  $fallback
+     * @return numeric-string
+     */
+    protected function numericString(string $value, string $fallback = '0'): string
+    {
+        return is_numeric($value) ? $value : $fallback;
     }
 
     /**

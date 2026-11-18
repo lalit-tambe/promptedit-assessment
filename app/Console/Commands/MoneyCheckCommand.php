@@ -14,7 +14,8 @@ class MoneyCheckCommand extends Command
 
     public function handle(): int
     {
-        $markup = (string) config('pixelforge.markup', '1.25');
+        $rawMarkup = (string) config('pixelforge.markup', '1.25');
+        $markup = is_numeric($rawMarkup) ? $rawMarkup : '1.25';
 
         $succeeded = Generation::query()
             ->where('status', Generation::STATUS_SUCCEEDED)
@@ -31,12 +32,16 @@ class MoneyCheckCommand extends Command
 
         $rows = [];
         $allValid = true;
-        /** @var array<string, array{count: int, provider_cost: string, charged_cost: string}> $dailyTotals */
+        /** @var array<string, array{count: int, provider_cost: numeric-string, charged_cost: numeric-string}> $dailyTotals */
         $dailyTotals = [];
 
         foreach ($succeeded as $generation) {
-            $providerCost = (string) ($generation->provider_cost ?? '0.000000000');
-            $chargedCost = (string) ($generation->charged_cost ?? '0.000000000000');
+            $rawProviderCost = (string) ($generation->provider_cost ?? '0.000000000');
+            $providerCost = is_numeric($rawProviderCost) ? $rawProviderCost : '0.000000000';
+
+            $rawChargedCost = (string) ($generation->charged_cost ?? '0.000000000000');
+            $chargedCost = is_numeric($rawChargedCost) ? $rawChargedCost : '0.000000000000';
+
             $expectedUserPrice = bcmul($providerCost, $markup, 12);
 
             $matchesFormula = bccomp($chargedCost, $expectedUserPrice, 12) === 0;
