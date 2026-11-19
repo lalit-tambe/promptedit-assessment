@@ -7,6 +7,7 @@ import {
     LayoutGrid,
     Menu,
     Search,
+    ShieldCheck,
     Sparkles,
     Wallet,
 } from '@lucide/vue';
@@ -72,23 +73,35 @@ const { isCurrentUrl, whenCurrentUrl } = useCurrentUrl();
 const activeItemStyles =
     'text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100';
 
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
-    {
-        title: 'Generate',
-        href: '/generate',
-        icon: Sparkles,
-    },
-    {
-        title: 'History',
-        href: '/generations',
-        icon: History,
-    },
-];
+const mainNavItems = computed<NavItem[]>(() => {
+    const items: NavItem[] = [
+        {
+            title: 'Dashboard',
+            href: dashboard(),
+            icon: LayoutGrid,
+        },
+        {
+            title: 'Generate',
+            href: '/generate',
+            icon: Sparkles,
+        },
+        {
+            title: 'History',
+            href: '/generations',
+            icon: History,
+        },
+    ];
+
+    if (auth.value?.user?.is_admin) {
+        items.push({
+            title: 'Admin Report',
+            href: '/admin/report',
+            icon: ShieldCheck,
+        });
+    }
+
+    return items;
+});
 
 const rightNavItems: NavItem[] = [
     {
