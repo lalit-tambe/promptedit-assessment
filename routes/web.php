@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CreditController;
 use App\Http\Controllers\GenerationController;
 use App\Http\Controllers\PixelforgeWebhookController;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
@@ -17,6 +18,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/generations/estimate', [GenerationController::class, 'estimate'])->name('generations.estimate');
     Route::get('/generations', [GenerationController::class, 'index'])->name('generations.index');
     Route::post('/generations', [GenerationController::class, 'store'])->name('generations.store');
+    Route::post('/credits/purchase', [CreditController::class, 'store'])->name('credits.purchase');
 });
 
 require __DIR__.'/settings.php';

@@ -1,11 +1,20 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
-import { ImagePlus, Loader2, Sparkles, Trash2 } from '@lucide/vue';
-import { computed, reactive, ref, watch } from 'vue';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
+import {
+    AlertCircle,
+    CreditCard,
+    ImagePlus,
+    Loader2,
+    Sparkles,
+    Trash2,
+    Wallet,
+} from '@lucide/vue';
+import { computed, ref, watch } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { formatUsd, parseDecimalToScaledBigInt } from '@/lib/money';
 
 type TokenBreakdown = {
     input_text_tokens: number;
@@ -43,11 +52,13 @@ type Props = {
         max_prompt_length?: number;
         max_reference_images?: number;
     };
+    creditPurchaseAmount: string;
     initialEstimate: EstimateResult;
     initialMaxEstimate: EstimateResult;
 };
 
 const props = defineProps<Props>();
+const page = usePage();
 
 defineOptions({
     layout: {
@@ -97,31 +108,20 @@ const activeReferenceImageCount = computed(
         ).length,
 );
 
-/**
- * Convert an exact decimal string into scaled BigInt units (scale 12) without floats.
- */
-function parseDecimalToScaledBigInt(value: string, scale = 12): bigint {
-    const trimmed = value.trim();
-    const [wholePart = '0', fractionPart = ''] = trimmed.split('.');
-    const paddedFraction = (fractionPart + '0'.repeat(scale)).slice(0, scale);
-    return (
-        BigInt(wholePart || '0') * 10n ** BigInt(scale) +
-        BigInt(paddedFraction || '0')
-    );
+const currentBalance = computed(
+    () => page.props.auth?.balance ?? '0.000000000000',
+);
+const flashStatus = computed(() => page.props.flash?.status ?? null);
+const purchaseForm = useForm({});
+
+function buyCredits(): void {
+    purchaseForm.post('/credits/purchase', {
+        preserveScroll: true,
+    });
 }
 
-/**
- * Format a 12-decimal string (or scaled BigInt) to a display string with 6 decimal places.
- */
 function formatDisplayUsd(decimalString: string, minDecimals = 6): string {
-    const trimmed = decimalString.trim();
-    const [wholePart = '0', fractionPart = ''] = trimmed.split('.');
-    const strippedTrailingZeros = fractionPart.replace(/0+$/, '');
-    const visibleFraction =
-        strippedTrailingZeros.length > minDecimals
-            ? strippedTrailingZeros
-            : strippedTrailingZeros.padEnd(minDecimals, '0');
-    return `$${wholePart}.${visibleFraction}`;
+    return formatUsd(decimalString, minDecimals);
 }
 
 /**
@@ -213,6 +213,17 @@ function computeFromServerConfig(isMax: boolean): EstimateResult {
 const serverEstimate = ref<EstimateResult>(props.initialEstimate);
 const serverMaxEstimate = ref<EstimateResult>(props.initialMaxEstimate);
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+const hasInsufficientBalance = computed(
+    () =>
+        parseDecimalToScaledBigInt(currentBalance.value, 12) <
+        parseDecimalToScaledBigInt(serverEstimate.value.user_price, 12),
+);
+
+const balanceError = computed(() => {
+    const errors = genForm.errors as Record<string, string | undefined>;
+    return errors.balance;
+});
 
 watch(
     () => [
@@ -310,6 +321,56 @@ function submit(): void {
                 Create an image with Pixelforge and preview your estimated price
                 before submitting.
             </p>
+        </div>
+
+        <div
+            class="flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-card px-5 py-4 shadow-xs"
+            data-testid="balance-bar"
+        >
+            <div class="flex items-center gap-3">
+                <div
+                    class="flex size-9 items-center justify-center rounded-lg bg-muted text-foreground"
+                >
+                    <Wallet class="size-4" />
+                </div>
+                <div>
+                    <div class="text-xs text-muted-foreground">
+                        Credit balance
+                    </div>
+                    <div
+                        class="font-mono text-lg font-semibold tracking-tight text-foreground"
+                        data-testid="generate-credit-balance"
+                    >
+                        {{ formatDisplayUsd(currentBalance, 2) }}
+                    </div>
+                </div>
+            </div>
+
+            <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                :disabled="purchaseForm.processing"
+                data-testid="buy-credits-button"
+                @click="buyCredits"
+            >
+                <Loader2
+                    v-if="purchaseForm.processing"
+                    class="mr-1.5 size-4 animate-spin"
+                />
+                <CreditCard v-else class="mr-1.5 size-4" />
+                Buy credits (+{{
+                    formatDisplayUsd(props.creditPurchaseAmount, 2)
+                }})
+            </Button>
+        </div>
+
+        <div
+            v-if="flashStatus"
+            class="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-300"
+            data-testid="credit-purchase-status"
+        >
+            {{ flashStatus }}
         </div>
 
         <form
@@ -504,12 +565,34 @@ function submit(): void {
                 </div>
             </div>
 
+            <!-- Insufficient Balance Warning -->
+            <div
+                v-if="balanceError || hasInsufficientBalance"
+                class="flex items-start gap-2.5 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+                role="alert"
+                data-testid="insufficient-balance-alert"
+            >
+                <AlertCircle class="mt-0.5 size-4 shrink-0" />
+                <div>
+                    <p v-if="balanceError">{{ balanceError }}</p>
+                    <p v-else>
+                        Insufficient credit balance. Your current balance ({{
+                            formatDisplayUsd(currentBalance, 6)
+                        }}) is lower than the estimated cost ({{
+                            formatDisplayUsd(serverEstimate.user_price, 6)
+                        }}). Click <strong>Buy credits</strong> above to add
+                        funds before generating.
+                    </p>
+                </div>
+            </div>
+
             <!-- Submit -->
             <div class="flex items-center justify-end gap-3">
                 <Button
                     type="submit"
                     :disabled="
                         genForm.processing ||
+                        hasInsufficientBalance ||
                         promptCharacterCount === 0 ||
                         promptCharacterCount > maxPromptLength
                     "

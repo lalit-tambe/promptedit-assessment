@@ -1,6 +1,7 @@
 <?php
 
 use App\Jobs\SubmitGenerationJob;
+use App\Models\CreditLedger;
 use App\Models\Generation;
 use App\Models\User;
 use App\Services\Pixelforge\PixelforgeClient;
@@ -107,6 +108,13 @@ it('saves a queued generation with estimated cost and dispatches SubmitGeneratio
     Queue::fake();
 
     $user = User::factory()->create();
+
+    CreditLedger::query()->create([
+        'user_id' => $user->id,
+        'generation_id' => null,
+        'type' => CreditLedger::TYPE_PURCHASE,
+        'amount' => '5.000000000000',
+    ]);
 
     $response = $this->actingAs($user)->post('/generations', [
         'prompt' => str_repeat('a', 40), // 10 text tokens

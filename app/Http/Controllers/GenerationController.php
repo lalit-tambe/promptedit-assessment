@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\InsufficientBalanceException;
 use App\Http\Requests\StoreGenerationRequest;
 use App\Jobs\SubmitGenerationJob;
 use App\Models\Generation;
 use App\Models\User;
+use App\Services\CreditBalanceService;
 use App\Services\Pixelforge\PixelforgeClient;
 use App\Services\Pixelforge\PricingCalculator;
 use Illuminate\Http\JsonResponse;
@@ -64,6 +66,7 @@ class GenerationController extends Controller
             'tokens' => config('pixelforge.tokens'),
             'markup' => config('pixelforge.markup'),
             'limits' => config('pixelforge.limits'),
+            'creditPurchaseAmount' => (string) config('pixelforge.credit_purchase_amount', '5.000000000000'),
             'initialEstimate' => $calculator->estimate('', '1024x1024', 'medium', 0, $rates),
             'initialMaxEstimate' => $calculator->maxEstimate('', '1024x1024', 'medium', 0, $rates),
         ]);
@@ -132,6 +135,7 @@ class GenerationController extends Controller
         StoreGenerationRequest $request,
         PixelforgeClient $client,
         PricingCalculator $calculator,
+        CreditBalanceService $balanceService,
     ): RedirectResponse {
         /** @var array{prompt: string, size: string, quality: string, reference_images?: array<int, string>|null} $validated */
         $validated = $request->validated();
@@ -150,15 +154,19 @@ class GenerationController extends Controller
             $rates,
         );
 
-        $generation = Generation::query()->create([
-            'user_id' => $user->id,
-            'prompt' => $validated['prompt'],
-            'size' => $validated['size'],
-            'quality' => $validated['quality'],
-            'reference_urls' => $referenceImages,
-            'status' => Generation::STATUS_QUEUED,
-            'estimated_cost' => $estimate['user_price'],
-        ]);
+        try {
+            $generation = $balanceService->createGeneration($user, [
+                'prompt' => $validated['prompt'],
+                'size' => $validated['size'],
+                'quality' => $validated['quality'],
+                'reference_urls' => $referenceImages,
+                'estimated_cost' => $estimate['user_price'],
+            ]);
+        } catch (InsufficientBalanceException $e) {
+            return back()->withErrors([
+                'balance' => $e->getMessage(),
+            ]);
+        }
 
         SubmitGenerationJob::dispatch($generation);
 

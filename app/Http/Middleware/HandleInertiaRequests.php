@@ -2,11 +2,17 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
+use App\Services\CreditBalanceService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
 {
+    public function __construct(
+        private readonly CreditBalanceService $balanceService,
+    ) {}
+
     /**
      * The root template that's loaded on the first page visit.
      *
@@ -35,11 +41,17 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user,
+                'balance' => $user instanceof User ? $this->balanceService->balanceFor($user) : null,
+            ],
+            'flash' => [
+                'status' => $request->session()->get('status'),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];

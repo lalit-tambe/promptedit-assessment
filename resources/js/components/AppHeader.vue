@@ -8,6 +8,7 @@ import {
     Menu,
     Search,
     Sparkles,
+    Wallet,
 } from '@lucide/vue';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
@@ -42,6 +43,7 @@ import {
 import UserMenuContent from '@/components/UserMenuContent.vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { getInitials } from '@/composables/useInitials';
+import { formatUsd } from '@/lib/money';
 import { toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import type { BreadcrumbItem, NavItem } from '@/types';
@@ -56,6 +58,15 @@ const props = withDefaults(defineProps<Props>(), {
 
 const page = usePage();
 const auth = computed(() => page.props.auth);
+const formattedBalance = computed(() => {
+    const balance = auth.value?.balance;
+
+    if (typeof balance !== 'string' || balance.trim() === '') {
+        return null;
+    }
+
+    return formatUsd(balance, 2);
+});
 const { isCurrentUrl, whenCurrentUrl } = useCurrentUrl();
 
 const activeItemStyles =
@@ -207,6 +218,21 @@ const rightNavItems: NavItem[] = [
                 </div>
 
                 <div class="ml-auto flex items-center space-x-2">
+                    <Link
+                        v-if="formattedBalance !== null"
+                        href="/generate"
+                        class="inline-flex items-center gap-1.5 rounded-md border bg-muted/40 px-2.5 py-1 text-xs font-medium text-foreground transition-colors hover:bg-muted"
+                        data-testid="header-credit-balance"
+                    >
+                        <Wallet class="size-3.5 text-muted-foreground" />
+                        <span class="hidden text-muted-foreground sm:inline"
+                            >Balance:</span
+                        >
+                        <span class="font-mono font-semibold">{{
+                            formattedBalance
+                        }}</span>
+                    </Link>
+
                     <div class="relative flex items-center space-x-1">
                         <Button
                             variant="ghost"
